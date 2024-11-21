@@ -8,22 +8,33 @@ export default function() {
   useEffect(() => {
     const worklet = new Worklet()
 
+    // Bare handler
     worklet.start('/app.js', `
+      // UI to Bare
       const rpc = new BareKit.RPC((req) => {
         if (req.command === 'ping') {
           console.log(req.data.toString())
 
-          req.reply('Hello from Bare!')
+          req.reply('Bare Replied!')
         }
       })
+
+      // Bare to UI
+      const req = rpc.request('bare-ping')
+      req.send('Hello from Bare!')
+      req.reply('utf8').then((res) => console.log('UI Replied'))
     `)
 
-    const rpc = new worklet.RPC(() => { /* No reply */ })
+    // UI handler
+    const rpc = new worklet.RPC((req) => {
+      if (req.command === 'bare-ping') {
+        console.log('got', req.command)
+        req.reply('UI Replied!')
+      }
+    })
 
     const req = rpc.request('ping')
-
-    req.send('Hello from React Native!')
-
+    req.send('Hello from UI!')
     req.reply('utf8').then((res: string) => setReponse(res))
   }, [])
 
